@@ -6,10 +6,7 @@ rust_library(
         "src/**",
     ]),
     crate_root = "src/lib.rs",
-    proc_macro_deps = [
-        # Internal macros
-        "//alias/macro:binance_data_integration_macro",
-    ],
+    proc_macro_deps = [],
     tags = [
         "binance_spot_data_integration",
         "data_integration",
