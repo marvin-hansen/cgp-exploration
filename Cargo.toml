@@ -6,7 +6,6 @@ members = [
     "queng_extensions/*",
     "queng_integration/data/*",
     "queng_integration/traits/*",
-    "queng_macros/*",
     "queng_sbe/*",
 ]
 exclude = [
@@ -67,11 +66,6 @@ binance_usd_futures_data_integration = { path = "queng_integration/data/binance_
 binance_coin_futures_data_integration = { path = "queng_integration/data/binance_coin_futures_data_integration" }
 # Traits
 trait_data_integration = { path = "queng_integration/traits/trait_data_integration" }
-
-# Macros
-binance_data_integration_macro = { path = "queng_macros/binance_data_integration_macro" }
-data_integration_macro = { path = "queng_macros/data_integration_macro" }
-
 
 # SBE
 sbe_bindings = { path = "queng_sbe/sbe_bindings" }
