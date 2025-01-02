@@ -1,1 +1,1 @@
-//alias:trait_data_integration
+//alias:binance_core_data_integration

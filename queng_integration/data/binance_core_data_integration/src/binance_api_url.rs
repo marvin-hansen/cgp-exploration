@@ -19,67 +19,114 @@ const COIN_FUTURES_API_WSS_URL: &str = "wss://dstream.binance.com/ws";
 const COIN_FUTURES_TESTNET_API_BASE_URL: &str = "https://testnet.binancefuture.com/api/v3";
 const COIN_FUTURES_TESTNET_API_WSS_URL: &str = "wss://dstream.binancefuture.com";
 
+/// Use Binance Spot Market mainnet API endpoints.
+///
+/// This struct implements the `ApiUrlGetter` trait for the Binance Spot Market mainnet API endpoints.
+/// It provides the base URL for the API and the WebSocket URL for the Spot Market API.
+///
+/// # Notes
+/// - The API endpoints are subject to rate limits. Consult the
+///   [Binance API documentation](https://binance-docs.github.io/apidocs/spot/en/#how-to-get-started)
+///   for more information.
 pub struct UseBinanceSpotMainnetUrl;
 impl<Context> ApiUrlGetter<Context> for UseBinanceSpotMainnetUrl {
     fn api_url(_context: &Context) -> &str {
         SPOT_API_BASE_URL
     }
-
     fn api_wss_url(_context: &Context) -> &str {
         SPOT_API_WSS_URL
     }
 }
 
+/// Use Binance Spot Market testnet API endpoints.
+///
+/// This struct implements the `ApiUrlGetter` trait for the Binance Spot Market testnet API endpoints.
+/// It provides the base URL for the API and the WebSocket URL for the Spot Market API.
+///
+/// # Notes
+/// - The API endpoints are subject to rate limits. Consult the
+///   [Binance API documentation](https://binance-docs.github.io/apidocs/spot/en/#how-to-get-started)
+///   for more information.
 pub struct UseBinanceSpotTestnetUrl;
 impl<Context> ApiUrlGetter<Context> for UseBinanceSpotTestnetUrl {
     fn api_url(_context: &Context) -> &str {
         SPOT_TESTNET_API_BASE_URL
     }
-
     fn api_wss_url(_context: &Context) -> &str {
         SPOT_TESTNET_API_WSS_URL
     }
 }
 
+/// Use Binance USD-M Futures mainnet API endpoints.
+///
+/// This struct implements the `ApiUrlGetter` trait for the Binance USD-M Futures mainnet API endpoints.
+/// It provides the base URL for the API and the WebSocket URL for the USD-M Futures API.
+///
+/// # Notes
+/// - The API endpoints are subject to rate limits. Consult the
+///   [Binance API documentation](https://binance-docs.github.io/apidocs/futures/en/#how-to-get-started)
+///   for more information.
 pub struct UseBinanceUsdFuturesMainnetUrl;
 impl<Context> ApiUrlGetter<Context> for UseBinanceUsdFuturesMainnetUrl {
     fn api_url(_context: &Context) -> &str {
         USD_FUTURES_API_BASE_URL
     }
-
     fn api_wss_url(_context: &Context) -> &str {
         USD_FUTURES_API_WSS_URL
     }
 }
-
+/// Use Binance USD-M Futures testnet API endpoints.
+///
+/// This struct implements the `ApiUrlGetter` trait for the Binance USD-M Futures testnet API endpoints.
+/// It provides the base URL for the API and the WebSocket URL for the USD-M Futures API.
+///
+/// # Notes
+/// - The API endpoints are subject to rate limits. Consult the
+///   [Binance API documentation](https://binance-docs.github.io/apidocs/futures/en/#how-to-get-started)
+///   for more information.
 pub struct UseBinanceUsdFuturesTestnetUrl;
 impl<Context> ApiUrlGetter<Context> for UseBinanceUsdFuturesTestnetUrl {
     fn api_url(_context: &Context) -> &str {
         USD_FUTURES_TESTNET_API_BASE_URL
     }
-
     fn api_wss_url(_context: &Context) -> &str {
         USD_FUTURES_TESTNET_API_WSS_URL
     }
 }
 
+/// Use Binance Coin-M Futures mainnet API endpoints.
+///
+/// This struct implements the `ApiUrlGetter` trait for the Binance Coin-M Futures mainnet API endpoints.
+/// It provides the base URL for the API and the WebSocket URL for the Coin-M Futures API.
+///
+/// # Notes
+/// - The API endpoints are subject to rate limits. Consult the
+///   [Binance API documentation](https://binance-docs.github.io/apidocs/delivery/en/#basis)
+///   for more information.
 pub struct UseBinanceCoinFuturesMainnetUrl;
 impl<Context> ApiUrlGetter<Context> for UseBinanceCoinFuturesMainnetUrl {
     fn api_url(_context: &Context) -> &str {
         COIN_FUTURES_API_BASE_URL
     }
-
     fn api_wss_url(_context: &Context) -> &str {
         COIN_FUTURES_API_WSS_URL
     }
 }
 
+/// Use Binance Coin-M Futures testnet API endpoints.
+///
+/// This struct implements the `ApiUrlGetter` trait for the Binance Coin-M Futures testnet API endpoints.
+/// It provides the base URL for the API and the WebSocket URL for the Coin-M Futures API.
+///
+/// # Notes
+/// - The API endpoints are subject to rate limits. Consult the
+///   [Binance API documentation](https://binance-docs.github.io/apidocs/delivery/en/#basis)
+///   for more information.
 pub struct UseBinanceCoinFuturesTestnetUrl;
 impl<Context> ApiUrlGetter<Context> for UseBinanceCoinFuturesTestnetUrl {
     fn api_url(_context: &Context) -> &str {
         COIN_FUTURES_TESTNET_API_BASE_URL
     }
-
     fn api_wss_url(_context: &Context) -> &str {
         COIN_FUTURES_TESTNET_API_WSS_URL
     }
