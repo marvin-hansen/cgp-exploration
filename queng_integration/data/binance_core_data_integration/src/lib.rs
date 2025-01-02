@@ -1,3 +1,4 @@
+mod binance_api_url;
 mod ims_integration;
 mod ohlcv_data_integration;
 mod trade_data_integration;
