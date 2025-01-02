@@ -25,6 +25,10 @@ crates_vendor(
         #
         # Regular Rust dependencies
         #
+        "cgp": crate.spec(
+            package = "cgp",
+            version = "0.2",
+        ),
         "chrono": crate.spec(
             features = ["serde"],
             package = "chrono",

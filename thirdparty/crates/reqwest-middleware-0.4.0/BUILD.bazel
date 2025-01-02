@@ -87,7 +87,7 @@ rust_library(
     deps = [
         "//thirdparty/crates/anyhow-1.0.95:anyhow",
         "//thirdparty/crates/http-1.2.0:http",
-        "//thirdparty/crates/reqwest-0.12.11:reqwest",
+        "//thirdparty/crates/reqwest-0.12.12:reqwest",
         "//thirdparty/crates/serde-1.0.217:serde",
         "//thirdparty/crates/thiserror-1.0.69:thiserror",
         "//thirdparty/crates/tower-service-0.3.3:tower_service",

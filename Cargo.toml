@@ -79,18 +79,16 @@ sbe_utils = { path = "queng_sbe/sbe_utils" }
 # ==============
 # External crates
 # ==============
-# Dependencies for macros
-syn = { version = "2.0", features = ["full", "extra-traits"] }
-quote = "1.0"
-trait-variant = { version = "0.1.2" }
+trait-variant = { version = "0.1" }
 # Regular dependencies
-chrono = { version = "0.4.38", features = ["serde"] }
-rust_decimal = { version = "1.36" }
-futures = { version = "0.3.31" }
-futures-util = {version = "0.3.31"}
+cgp = {version = "0.2"}
+chrono = { version = "0.4", features = ["serde"] }
+rust_decimal = { version = "1" }
+futures = { version = "0.3" }
+futures-util = {version = "0.3"}
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "blocking", "gzip"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 rustls = { version = "0.23", features = ["ring"] }
 tokio = { version = "1.42", default-features = false, features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
-tokio-tungstenite = { version = "0.26.0", features = ["rustls-tls-webpki-roots"]}
+tokio-tungstenite = { version = "0.26", features = ["rustls-tls-webpki-roots"]}
