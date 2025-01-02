@@ -1,4 +1,3 @@
-
 // // LIVE API
 // // Binance Coin-M Futures API endpoints
 // // https://binance-docs.github.io/apidocs/delivery/en/#basis

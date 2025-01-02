@@ -5,6 +5,7 @@ members = [
     "queng_common/*",
     "queng_extensions/*",
     "queng_integration/data/*",
+    "queng_integration/errors/*",
     "queng_integration/traits/*",
     "queng_sbe/*",
 ]
@@ -64,6 +65,9 @@ binance_core_data_integration = { path = "queng_integration/data/binance_core_da
 binance_spot_data_integration = { path = "queng_integration/data/binance_spot_data_integration" }
 binance_usd_futures_data_integration = { path = "queng_integration/data/binance_usd_futures_data_integration" }
 binance_coin_futures_data_integration = { path = "queng_integration/data/binance_coin_futures_data_integration" }
+# Errors
+error_data_integration = { path = "queng_integration/errors/error_data_integration" }
+
 # Traits
 trait_data_integration = { path = "queng_integration/traits/trait_data_integration" }
 

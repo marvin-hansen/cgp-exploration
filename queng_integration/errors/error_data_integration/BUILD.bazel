@@ -1,12 +1,14 @@
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
 
 rust_library(
-    name = "trait_data_integration",
+    name = "error_data_integration",
     srcs = glob([
         "src/**",
     ]),
     crate_root = "src/lib.rs",
-    proc_macro_deps = [],
+    proc_macro_deps = [
+        "//thirdparty/crates:trait-variant",
+    ],
     tags = [
         "integration",
         "trait",
@@ -22,14 +24,14 @@ rust_library(
 
 rust_doc(
     name = "doc",
-    crate = ":trait_data_integration",
+    crate = ":error_data_integration",
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
 
 rust_doc_test(
     name = "doc_test",
-    crate = ":trait_data_integration",
+    crate = ":error_data_integration",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )

@@ -40,7 +40,7 @@ alias(
 # Integration
 ###############################################################################
 
-# Data Integration
+# Data Integrations
 ##################
 
 alias(
@@ -63,6 +63,13 @@ alias(
     actual = "//queng_integration/data/binance_coin_futures_data_integration",
 )
 
+# Errors
+##############
+
+alias(
+    name = "error_data_integration",
+    actual = "//queng_integration/errors/error_data_integration",
+)
 
 # Traits
 ##############
