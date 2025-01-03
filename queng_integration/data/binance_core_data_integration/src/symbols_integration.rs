@@ -5,7 +5,17 @@ use common_errors::MessageProcessingError;
 use serde_json::Value;
 use std::collections::HashSet;
 use tokio::time::Instant;
-use trait_data_integration::{CanFetchExchangeSymbols, HasSymbolType};
+use common_data_bar::TimeResolution;
+use trait_data_integration::{CanFetchExchangeSymbols, HasSymbolType, ProvideSymbolType, ProvideTimeResolutionType};
+
+// Specify associated types
+impl<Context> ProvideSymbolType<Context> for ImsBinanceDataIntegration {
+    type Symbol = String;
+}
+
+impl<Context>  ProvideTimeResolutionType<Context> for ImsBinanceDataIntegration {
+    type TimeResolution = TimeResolution;
+}
 
 impl<Context> CanFetchExchangeSymbols<Context> for ImsBinanceDataIntegration
 where

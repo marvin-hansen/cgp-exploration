@@ -3,13 +3,13 @@ use cgp::prelude::*;
 #[cgp_component {
         name: SymbolTypeComponent,
         provider: ProvideSymbolType}]
-pub trait HasSymbolType: Async {
-    type Symbol: Async;
+pub trait HasSymbolType {
+    type Symbol;
 }
 
 #[cgp_component {
         name: TimeResolutionTypeComponent,
         provider: ProvideTimeResolutionType,}]
-pub trait HasTimeResolutionType: Async {
-    type TimeResolution: Async;
+pub trait HasTimeResolutionType {
+    type TimeResolution;
 }
