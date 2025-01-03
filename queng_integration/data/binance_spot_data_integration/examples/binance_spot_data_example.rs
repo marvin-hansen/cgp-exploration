@@ -14,8 +14,13 @@ async fn main() -> Result<(), Error> {
     let api_wss_url = integration.api_wss_url();
     println!("api_wss_url: {}", api_wss_url);
 
-    let symbols = integration.fetch_exchange_symbols().await;
-    println!("symbols: {:#?}", symbols);
+    let res = integration.fetch_exchange_symbols().await;
+    if res.is_ok() {
+        let symbols = res.unwrap();
+        println!("symbols: {:#?}", symbols);
+    } else {
+        println!("Error: {}", res.unwrap_err());
+    }
 
     Ok(())
 }
