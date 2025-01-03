@@ -2,16 +2,18 @@ use crate::getters::HasBinanceIntegrationFields;
 use crate::{ImsBinanceDataIntegration, SYMBOL_CACHE_DURATION};
 use cgp::core::Async;
 use cgp::prelude::HasErrorType;
+use error_data_integration::ImsDataIntegrationError;
 use serde_json::Value;
 use std::collections::HashSet;
 use tokio::time::Instant;
-use error_data_integration::ImsDataIntegrationError;
-use trait_data_integration::{CanFetchExchangeSymbols, HasApiUrl, HasSymbolType, SymbolFetcher, SymbolValidator};
+use trait_data_integration::{
+    CanFetchExchangeSymbols, HasApiUrl, HasSymbolType, SymbolFetcher, SymbolValidator,
+};
 
 impl<Context> SymbolFetcher<Context> for ImsBinanceDataIntegration
 where
     Context: HasSymbolType<Symbol = String>
-        + HasErrorType<Error= ImsDataIntegrationError>
+        + HasErrorType<Error = ImsDataIntegrationError>
         + HasBinanceIntegrationFields
         + HasApiUrl
         + Async
@@ -43,20 +45,22 @@ where
 
         // Cache is stale or doesn't exist, fetch symbols from API
         let url = format!("{}/exchangeInfo", context.api_url());
-        let response =
-            context.http_client().get(&url).send().await.map_err(|e| {
-                ImsDataIntegrationError::FailedToFetchSymbols(e.to_string()).into()
-            })?;
-
-        let data: Value = response
-            .json()
+        let response = context
+            .http_client()
+            .get(&url)
+            .send()
             .await
-            .map_err(|e| ImsDataIntegrationError::FailedToDeserializeJsonSymbols(e.to_string()).into())?;
+            .map_err(|e| ImsDataIntegrationError::FailedToFetchSymbols(e.to_string()).into())?;
 
+        let data: Value = response.json().await.map_err(|e| {
+            ImsDataIntegrationError::FailedToDeserializeJsonSymbols(e.to_string()).into()
+        })?;
 
         let symbols = data["symbols"]
             .as_array()
-            .ok_or_else(|| ImsDataIntegrationError::FailedToExtractSymbolsFromResponse("".to_string()).into())?
+            .ok_or_else(|| {
+                ImsDataIntegrationError::FailedToExtractSymbolsFromResponse("".to_string()).into()
+            })?
             .iter()
             .filter_map(|s| s["symbol"].as_str().map(String::from))
             .collect::<HashSet<_>>();
@@ -71,12 +75,12 @@ where
 impl<Context> SymbolValidator<Context> for ImsBinanceDataIntegration
 where
     Context: HasSymbolType<Symbol = String>
-    + HasErrorType<Error= ImsDataIntegrationError>
-    + HasBinanceIntegrationFields
-    + CanFetchExchangeSymbols
-    + Async
-    + Sync
-    + Send,
+        + HasErrorType<Error = ImsDataIntegrationError>
+        + HasBinanceIntegrationFields
+        + CanFetchExchangeSymbols
+        + Async
+        + Sync
+        + Send,
 {
     /// Validates a list of trading symbols against Binance's supported symbols.
     ///
@@ -92,9 +96,11 @@ where
     /// - `Ok(true)`: If all symbols are valid
     /// - `Err(MessageProcessingError)`: If any symbols are invalid, with error message listing invalid symbols
     ///
-    async fn validate_symbols( context: &Context, symbols: &[Context::Symbol]) -> Result<bool, Context::Error>{
-
-        let valid_symbols = match Context::fetch_exchange_symbols(context).await{
+    async fn validate_symbols(
+        context: &Context,
+        symbols: &[Context::Symbol],
+    ) -> Result<bool, Context::Error> {
+        let valid_symbols = match Context::fetch_exchange_symbols(context).await {
             Ok(valid_symbols) => valid_symbols,
             Err(e) => return Err(e),
         };

@@ -6,7 +6,6 @@ pub enum ImsDataIntegrationError {
     FailedToDeserializeJsonSymbols(String),
     FailedToExtractSymbolsFromResponse(String),
     FailedToValidateSymbols(String),
-
 }
 
 impl Error for ImsDataIntegrationError {}
