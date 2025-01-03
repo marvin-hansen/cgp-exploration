@@ -1,6 +1,6 @@
 use crate::getters::HasBinanceIntegrationFields;
 use crate::{
-    utils, utils_connect, ImsBinanceDataIntegration, MAX_RECONNECT_ATTEMPTS, RECONNECT_DELAY,
+    utils, utils_connect, UseImsBinanceDataIntegration, MAX_RECONNECT_ATTEMPTS, RECONNECT_DELAY,
     RECONNECT_INTERVAL,
 };
 use cgp::core::Async;
@@ -17,7 +17,7 @@ use trait_data_integration::{
     OhlcvDataStreamProvider,
 };
 
-impl<Context> OhlcvDataStreamProvider<Context> for ImsBinanceDataIntegration
+impl<Context> OhlcvDataStreamProvider<Context> for UseImsBinanceDataIntegration
 where
     Context: HasBinanceIntegrationFields
         + HasSymbolType<Symbol = String>

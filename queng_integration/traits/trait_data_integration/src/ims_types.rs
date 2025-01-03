@@ -2,7 +2,7 @@ use cgp::prelude::*;
 
 #[cgp_component {
         name: SymbolTypeComponent,
-        provider: ProvideSymbolType,
+        provider: SymbolTypeProvider,
     }]
 pub trait HasSymbolType: Async {
     type Symbol: Async;
@@ -10,7 +10,7 @@ pub trait HasSymbolType: Async {
 
 #[cgp_component {
         name: TimeResolutionTypeComponent,
-        provider: ProvideTimeResolutionType,
+        provider: TimeResolutionTypeProvider,
     }]
 pub trait HasTimeResolutionType: Async {
     type TimeResolution: Async;

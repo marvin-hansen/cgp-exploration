@@ -1,4 +1,4 @@
-use crate::ImsBinanceDataIntegration;
+use crate::UseImsBinanceDataIntegration;
 use cgp::prelude::*;
 use reqwest::Client;
 use std::collections::{HashMap, HashSet};
@@ -16,7 +16,7 @@ pub(crate) trait HasBinanceIntegrationFields {
     fn ohlcv_handlers(&self) -> &RwLock<HashMap<String, JoinHandle<()>>>;
 }
 
-impl HasBinanceIntegrationFields for ImsBinanceDataIntegration {
+impl HasBinanceIntegrationFields for UseImsBinanceDataIntegration {
     fn http_client(&self) -> &Client {
         &self.http_client
     }

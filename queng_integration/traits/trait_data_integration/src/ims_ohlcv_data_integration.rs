@@ -1,7 +1,10 @@
 use crate::{HasSymbolType, HasTimeResolutionType};
 use cgp::prelude::*;
 
-#[cgp_component {provider: OhlcvDataStreamProvider,}]
+#[cgp_component {
+    name: OhlcvDataStreamComponent,
+    provider: OhlcvDataStreamProvider,
+    }]
 #[async_trait]
 pub trait CanStreamOhlcvData: HasSymbolType + HasTimeResolutionType + HasErrorType {
     async fn start_ohlcv_data(

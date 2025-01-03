@@ -14,6 +14,8 @@ use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use tokio::time::Instant;
 
+pub use crate::api_url::*;
+
 /// Duration between symbol cache refreshes.
 ///
 /// This value determines how often the symbol cache is refreshed from the Binance API.
@@ -54,7 +56,7 @@ pub(crate) const RECONNECT_DELAY: Duration = Duration::from_secs(5);
 /// - Automatic cleanup of terminated connections
 ///
 #[derive(Default)]
-pub struct ImsBinanceDataIntegration {
+pub struct UseImsBinanceDataIntegration {
     http_client: Client,
     symbols_active_trade: RwLock<Vec<String>>,
     symbols_active_ohlcv: RwLock<Vec<String>>,
@@ -63,7 +65,7 @@ pub struct ImsBinanceDataIntegration {
     ohlcv_handlers: RwLock<HashMap<String, JoinHandle<()>>>,
 }
 
-impl ImsBinanceDataIntegration {
+impl UseImsBinanceDataIntegration {
     pub fn new() -> Self {
         Self {
             http_client: Client::new(),

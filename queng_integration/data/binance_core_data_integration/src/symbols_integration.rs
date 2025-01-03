@@ -1,5 +1,5 @@
 use crate::getters::HasBinanceIntegrationFields;
-use crate::{ImsBinanceDataIntegration, SYMBOL_CACHE_DURATION};
+use crate::{UseImsBinanceDataIntegration, SYMBOL_CACHE_DURATION};
 use cgp::core::Async;
 use cgp::prelude::HasErrorType;
 use error_data_integration::ImsDataIntegrationError;
@@ -10,7 +10,7 @@ use trait_data_integration::{
     CanFetchExchangeSymbols, HasApiUrl, HasSymbolType, SymbolFetchProvider, SymbolValidatorProvider,
 };
 
-impl<Context> SymbolFetchProvider<Context> for ImsBinanceDataIntegration
+impl<Context> SymbolFetchProvider<Context> for UseImsBinanceDataIntegration
 where
     Context: HasSymbolType<Symbol = String>
         + HasErrorType<Error = ImsDataIntegrationError>
@@ -72,7 +72,7 @@ where
     }
 }
 
-impl<Context> SymbolValidatorProvider<Context> for ImsBinanceDataIntegration
+impl<Context> SymbolValidatorProvider<Context> for UseImsBinanceDataIntegration
 where
     Context: HasSymbolType<Symbol = String>
         + HasErrorType<Error = ImsDataIntegrationError>
