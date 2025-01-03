@@ -6,6 +6,7 @@ pub enum ImsDataIntegrationError {
     FailedToDeserializeJsonSymbols(String),
     FailedToExtractSymbolsFromResponse(String),
     FailedToValidateSymbols(String),
+    SymbolNotFound(String),
 }
 
 impl Error for ImsDataIntegrationError {}
@@ -31,6 +32,11 @@ impl std::fmt::Display for ImsDataIntegrationError {
             ImsDataIntegrationError::FailedToValidateSymbols(msg) => write!(
                 f,
                 "[ImsDataIntegrationError]: Failed to validate symbols: {}",
+                msg
+            ),
+            ImsDataIntegrationError::SymbolNotFound(msg) => write!(
+                f,
+                "[ImsDataIntegrationError]: Symbol not found: {}",
                 msg
             ),
         }

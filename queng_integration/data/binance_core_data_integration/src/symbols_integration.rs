@@ -6,11 +6,9 @@ use error_data_integration::ImsDataIntegrationError;
 use serde_json::Value;
 use std::collections::HashSet;
 use tokio::time::Instant;
-use trait_data_integration::{
-    CanFetchExchangeSymbols, HasApiUrl, HasSymbolType, SymbolFetcher, SymbolValidator,
-};
+use trait_data_integration::{CanFetchExchangeSymbols, HasApiUrl, HasSymbolType, SymbolFetchProvider, SymbolValidatorProvider};
 
-impl<Context> SymbolFetcher<Context> for ImsBinanceDataIntegration
+impl<Context> SymbolFetchProvider<Context> for ImsBinanceDataIntegration
 where
     Context: HasSymbolType<Symbol = String>
         + HasErrorType<Error = ImsDataIntegrationError>
@@ -72,7 +70,7 @@ where
     }
 }
 
-impl<Context> SymbolValidator<Context> for ImsBinanceDataIntegration
+impl<Context> SymbolValidatorProvider<Context> for ImsBinanceDataIntegration
 where
     Context: HasSymbolType<Symbol = String>
         + HasErrorType<Error = ImsDataIntegrationError>
