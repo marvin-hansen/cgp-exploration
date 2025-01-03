@@ -1,9 +1,6 @@
 use binance_core_data_integration::{UseBinanceSpotMainnetUrl, UseImsBinanceDataIntegration};
 use cgp::prelude::*;
-use trait_data_integration::{
-    ApiUrlComponent, OhlcvDataStreamComponent, SymbolFetchComponent, SymbolTypeComponent,
-    SymbolValidatorComponent, TimeResolutionTypeComponent, TradeDataStreamComponent,
-};
+use trait_data_integration::*;
 
 #[derive(Default, Copy, Clone)]
 pub struct ImsBinanceSpotDataIntegration {}
@@ -23,12 +20,14 @@ impl HasComponents for ImsBinanceSpotDataIntegration {
 delegate_components! {
     ImsBinanceSpotDataIntegrationComponents {
         ApiUrlComponent: UseBinanceSpotMainnetUrl,
-        // These are always the same for Binance
-        SymbolFetchComponent: UseImsBinanceDataIntegration,
-        SymbolValidatorComponent: UseImsBinanceDataIntegration,
-        OhlcvDataStreamComponent: UseImsBinanceDataIntegration,
-        TradeDataStreamComponent: UseImsBinanceDataIntegration,
-        SymbolTypeComponent: UseImsBinanceDataIntegration,
-        TimeResolutionTypeComponent: UseImsBinanceDataIntegration,
+        [
+            // These are always the same for all Binance integrations
+            SymbolFetchComponent,
+            SymbolValidatorComponent,
+            OhlcvDataStreamComponent,
+            TradeDataStreamComponent,
+            SymbolTypeComponent,
+            TimeResolutionTypeComponent,
+        ]: UseImsBinanceDataIntegration,
     }
 }
