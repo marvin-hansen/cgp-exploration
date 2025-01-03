@@ -5,6 +5,7 @@ mod trade_data_integration;
 mod utils;
 mod utils_connect;
 mod getters;
+mod types;
 
 use reqwest::Client;
 use std::collections::{HashMap, HashSet};

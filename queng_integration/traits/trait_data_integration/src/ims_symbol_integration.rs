@@ -14,7 +14,8 @@ pub trait CanFetchExchangeSymbols: HasSymbolType + HasErrorType {
 #[async_trait]
 #[cgp_component {
     name: SymbolValidatorComponent,
-    provider: SymbolValidator,}]
+    provider: SymbolValidator,
+    context: Context,}]
 pub trait CanValidateSymbols: HasSymbolType + HasErrorType {
     async fn validate_symbols(&self, symbols: &[Self::Symbol]) -> Result<bool, Self::Error>;
 }

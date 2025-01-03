@@ -5,21 +5,13 @@ use common_errors::MessageProcessingError;
 use serde_json::Value;
 use std::collections::HashSet;
 use tokio::time::Instant;
-use common_data_bar::TimeResolution;
-use trait_data_integration::{CanFetchExchangeSymbols, HasSymbolType, ProvideSymbolType, ProvideTimeResolutionType};
-
-// Specify associated types
-impl<Context> ProvideSymbolType<Context> for ImsBinanceDataIntegration {
-    type Symbol = String;
-}
-
-impl<Context>  ProvideTimeResolutionType<Context> for ImsBinanceDataIntegration {
-    type TimeResolution = TimeResolution;
-}
+use trait_data_integration::{
+    CanFetchExchangeSymbols, HasApiUrl, HasSymbolType, ProvideSymbolType};
 
 impl<Context> CanFetchExchangeSymbols<Context> for ImsBinanceDataIntegration
 where
-    Context: HasSymbolType + HasErrorType + HasBinanceIntegrationFields,
+    Context:
+        HasSymbolType<Symbol = String> + HasErrorType + HasBinanceIntegrationFields + HasApiUrl,
 {
     /// Retrieves and caches the list of valid trading symbols from Binance.
     ///
@@ -35,7 +27,9 @@ where
     /// - `Ok(HashSet<String>)`: Set of valid trading symbols
     /// - `Err(MessageProcessingError)`: If API call fails or response is invalid
     ///
-    async fn fetch_exchange_symbols(context: &Context) -> Result<HashSet<Context::Symbol>, Context::Error> {
+    async fn fetch_exchange_symbols(
+        context: &Context,
+    ) -> Result<HashSet<Context::Symbol>, Context::Error> {
         // Check cache first
         if let Some((symbols, timestamp)) = &*context.symbol_cache().read().await {
             if timestamp.elapsed() < SYMBOL_CACHE_DURATION {
@@ -44,7 +38,7 @@ where
         }
 
         // Cache is stale or doesn't exist, fetch symbols from API
-        let url = format!("{}/exchangeInfo", context.api_base_url());
+        let url = format!("{}/exchangeInfo", context.api_url());
         let response =
             context.http_client().get(&url).send().await.map_err(|e| {
                 MessageProcessingError::new(format!("Failed to fetch symbols: {}", e))
