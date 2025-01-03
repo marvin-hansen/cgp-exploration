@@ -7,7 +7,6 @@ pub trait CanStreamTradeData: HasSymbolType + HasTimeResolutionType + HasErrorTy
     async fn start_trade_data(
         &self,
         symbols: &[Self::Symbol],
-        time_resolution: &Self::TimeResolution,
     ) -> Result<(), Self::Error>;
 
     async fn stop_trade_data(&self, symbols: &[Self::Symbol]) -> Result<(), Self::Error>;

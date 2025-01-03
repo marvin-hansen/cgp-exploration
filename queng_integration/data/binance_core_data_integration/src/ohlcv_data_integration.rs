@@ -86,6 +86,7 @@ where
             // Clone the processor to pass it into the spawned task w/o bumping into the borrow checker.
             // let processor = Arc::clone(&processor);
 
+            // let proc = context.process_event;
             let symbol_clone = symbol.clone();
             let stream_name = format!("{}@kline_{}", symbol_clone, time_resolution);
             let api_url = api_url.clone();
