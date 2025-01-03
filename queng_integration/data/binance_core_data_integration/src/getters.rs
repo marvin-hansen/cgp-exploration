@@ -1,5 +1,5 @@
 use crate::ImsBinanceDataIntegration;
-use cgp::prelude::cgp_component;
+use cgp::prelude::*;
 use reqwest::Client;
 use std::collections::{HashMap, HashSet};
 use tokio::sync::RwLock;

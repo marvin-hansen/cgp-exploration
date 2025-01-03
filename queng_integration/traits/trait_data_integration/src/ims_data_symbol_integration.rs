@@ -5,7 +5,8 @@ use std::collections::HashSet;
 #[async_trait]
 #[cgp_component {
     name: SymbolFetcherComponent,
-    provider: SymbolFetcher}]
+    provider: SymbolFetcher,
+    context: Context,}]
 pub trait CanFetchExchangeSymbols: HasSymbolType + HasErrorType {
     async fn fetch_exchange_symbols(&self) -> Result<HashSet<Self::Symbol>, Self::Error>;
 }
