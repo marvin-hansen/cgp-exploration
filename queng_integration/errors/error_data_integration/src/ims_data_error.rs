@@ -34,11 +34,9 @@ impl std::fmt::Display for ImsDataIntegrationError {
                 "[ImsDataIntegrationError]: Failed to validate symbols: {}",
                 msg
             ),
-            ImsDataIntegrationError::SymbolNotFound(msg) => write!(
-                f,
-                "[ImsDataIntegrationError]: Symbol not found: {}",
-                msg
-            ),
+            ImsDataIntegrationError::SymbolNotFound(msg) => {
+                write!(f, "[ImsDataIntegrationError]: Symbol not found: {}", msg)
+            }
         }
     }
 }

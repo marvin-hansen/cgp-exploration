@@ -28,7 +28,8 @@ where
         + HasApiUrl
         + Async
         + Sync
-        + Send,
+        + Send
+        + Clone,
 {
     /// Starts real-time OHLCV (candlestick) data streams for the specified symbols.
     ///
@@ -67,7 +68,7 @@ where
         context.validate_symbols(symbols).await?;
 
         let mut handlers = context.ohlcv_handlers().write().await;
-        let api_url = context.api_wss_url().clone();
+        let api_url = context.api_wss_url().to_string();
 
         for symbol in symbols {
             let symbol = symbol.to_lowercase();
@@ -78,18 +79,16 @@ where
             }
 
             let stream_name = format!("{}@kline_{}", symbol, time_resolution);
-            let ws_stream =
-                utils_connect::connect_websocket_static(&stream_name, api_url.to_string())
-                    .await
-                    .expect("Failed to connect to WebSocket");
+            let ws_stream = utils_connect::connect_websocket_static(&stream_name, api_url.clone())
+                .await
+                .expect("Failed to connect to WebSocket");
 
-            // Clone the processor to pass it into the spawned task w/o bumping into the borrow checker.
-            // let processor = Arc::clone(&processor);
-
-            // let proc = context.process_event;
             let symbol_clone = symbol.clone();
             let stream_name = format!("{}@kline_{}", symbol_clone, time_resolution);
-            let api_url = api_url.clone();
+            let api_url_clone = api_url.clone();
+
+            // Clone the processor from context before spawning the tokio task
+            let ctx_clone = context.clone();
 
             let handle = tokio::spawn(async move {
                 let mut reconnect_time = Instant::now() + RECONNECT_INTERVAL;
@@ -115,12 +114,8 @@ where
                                         let (_, data) = OHLCVBar::encode_to_sbe(bar)
                                             .expect("Failed to encode OHLCV data");
 
-                                        // Previously, that worked c/b processor was actually an arc reference to the actual processor
-                                        //  if let Err(e) = processor.process_event(&[data]).await {
-
-                                        // Scope violation: context` escapes the associated function body here
-                                        // argument requires that `'1` must outlive `'static
-                                        if let Err(e) = context.process_event(&[data]).await {
+                                        // Use the cloned processor instead of context
+                                        if let Err(e) = ctx_clone.process_event(&[data]).await {
                                             eprintln!("Error processing OHLCV data: {}", e);
                                             return;
                                         }
@@ -145,7 +140,7 @@ where
                         retry_count += 1;
                         match utils_connect::connect_websocket_static(
                             &stream_name,
-                            api_url.to_string(),
+                            api_url_clone.to_string(),
                         )
                         .await
                         {
@@ -178,6 +173,7 @@ where
                 }
             });
 
+            // Store the handler to cancel the stream later when calling stop_ohlcv_data
             handlers.insert(symbol.clone(), handle);
             // Add symbol to active OHLCV symbols list
             context.symbols_active_ohlcv().write().await.push(symbol);
@@ -220,7 +216,6 @@ where
         }
 
         let mut handlers = context.ohlcv_handlers().write().await;
-        let mut stopped_symbols = Vec::new();
         let mut not_found_symbols = Vec::new();
 
         for symbol in symbols {
@@ -235,7 +230,6 @@ where
             // Remove and abort the handler for this symbol
             if let Some(handle) = handlers.remove(&symbol) {
                 handle.abort();
-                stopped_symbols.push(symbol.clone());
                 // Remove symbol from active OHLCV symbols list
                 let mut active_symbols = context.symbols_active_ohlcv().write().await;
                 if let Some(pos) = active_symbols.iter().position(|s| s == &symbol) {
@@ -244,10 +238,13 @@ where
             }
         }
 
+        // Return the RW lock
+        drop(handlers);
+
         // If any symbols were not found in ohlcv_handlers, return an error
         if !not_found_symbols.is_empty() {
             return Err(ImsDataIntegrationError::SymbolNotFound(format!(
-                "The following symbols were not found and are NOT active OHLCV streams: {:?}",
+                "The following symbols were not found and are NOT active OHLCV streams: {:?}, All other streams have been stopped.",
                 not_found_symbols
             )));
         }

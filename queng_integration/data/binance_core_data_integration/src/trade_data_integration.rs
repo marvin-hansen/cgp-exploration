@@ -1,9 +1,17 @@
 use crate::getters::HasBinanceIntegrationFields;
-use crate::ImsBinanceDataIntegration;
+use crate::{
+    utils, utils_connect, ImsBinanceDataIntegration, MAX_RECONNECT_ATTEMPTS, RECONNECT_DELAY,
+    RECONNECT_INTERVAL,
+};
 use cgp::core::Async;
 use cgp::prelude::HasErrorType;
-use common_data_bar::TimeResolution;
+use common_data_bar::{TimeResolution, TradeBar};
+use common_data_bar_ext::SbeTradeBarExtension;
 use error_data_integration::ImsDataIntegrationError;
+use futures_util::StreamExt;
+use std::time::Duration;
+use tokio::time::{sleep, Instant};
+use tokio_tungstenite::tungstenite::Message;
 use trait_data_integration::{
     CanProcessEvent, CanValidateSymbols, HasApiUrl, HasSymbolType, HasTimeResolutionType,
     TradeDataStreamProvider,
@@ -20,7 +28,8 @@ where
         + HasApiUrl
         + Async
         + Sync
-        + Send,
+        + Send
+        + Clone,
 {
     /// Starts real-time trade data streams for the specified symbols.
     ///
@@ -39,9 +48,11 @@ where
     /// * `symbols` - List of trading symbols (e.g., ["BTCUSDT", "ETHUSDT"])
     /// * `processor` - Event processor to handle incoming trade data
     ///
+    ///
     /// # Returns
     /// - `Ok(())`: If all streams are started successfully
     /// - `Err(MessageProcessingError)`: If symbol validation fails or connection errors occur
+    ///
     ///
     /// # Connection Management
     /// - Automatic reconnection every 12 hours
@@ -50,115 +61,123 @@ where
     /// - Graceful error handling with detailed logging
     ///
     async fn start_trade_data(
-        _context: &Context,
-        _symbols: &[Context::Symbol],
+        context: &Context,
+        symbols: &[Context::Symbol],
+        //
     ) -> Result<(), Context::Error> {
-        //         // Validate symbols first
-        //         self.validate_symbols(symbols).await?;
-        //
-        //         let mut handlers = self.trade_handlers.write().await;
-        //         let api_url = self.api_wss_url().clone();
-        //
-        //         for symbol in symbols {
-        //             let symbol = symbol.to_lowercase();
-        //
-        //             if handlers.contains_key(&symbol) {
-        //                 // Symbol is already in the handlers collection, do nothing
-        //                 continue;
-        //             }
-        //
-        //             let stream_name = format!("{}@trade", symbol);
-        //             let ws_stream =
-        //                 utils_connect::connect_websocket_static(&stream_name, api_url.clone()).await?;
-        //             let processor = Arc::clone(&processor);
-        //
-        //             let symbol_clone = symbol.clone();
-        //             let stream_name = format!("{}@trade", symbol_clone);
-        //             let api_url = api_url.clone();
-        //             let handle = tokio::spawn(async move {
-        //                 let mut reconnect_time = Instant::now() + RECONNECT_INTERVAL;
-        //                 let mut ws_stream = ws_stream;
-        //
-        //                 'connection: loop {
-        //                     loop {
-        //                         // Check if we need to reconnect
-        //                         if Instant::now() >= reconnect_time {
-        //                             break;
-        //                         }
-        //
-        //                         // Process messages with timeout
-        //                         match tokio::time::timeout(Duration::from_secs(1), ws_stream.next()).await {
-        //                             Ok(Some(Ok(msg))) => {
-        //                                 if let Message::Text(text) = msg {
-        //                                     let bar = utils::extract_trade_bar_from_json(
-        //                                         text.as_str(),
-        //                                         &symbol_clone,
-        //                                     )
-        //                                     .await;
-        //                                     if let Some(bar) = bar {
-        //                                         let (_, data) = TradeBar::encode_to_sbe(bar)
-        //                                             .expect("Failed to encode trade data");
-        //                                         if let Err(e) = processor.process(&[data]).await {
-        //                                             eprintln!("Error processing trade data: {}", e);
-        //                                             return;
-        //                                         }
-        //                                     }
-        //                                 }
-        //                             }
-        //                             Ok(Some(Err(e))) => {
-        //                                 eprintln!("WebSocket error for {}: {}", symbol_clone, e);
-        //                                 break;
-        //                             }
-        //                             Ok(None) => {
-        //                                 eprintln!("WebSocket stream ended for {}", symbol_clone);
-        //                                 break;
-        //                             }
-        //                             Err(_) => continue, // Timeout, continue checking reconnect time
-        //                         }
-        //                     }
-        //
-        //                     // Attempt to reconnect with retry limit
-        //                     let mut retry_count = 0;
-        //                     loop {
-        //                         retry_count += 1;
-        //                         match utils_connect::connect_websocket_static(&stream_name, api_url.clone())
-        //                             .await
-        //                         {
-        //                             Ok(new_stream) => {
-        //                                 ws_stream = new_stream;
-        //                                 reconnect_time = Instant::now() + RECONNECT_INTERVAL;
-        //                                 eprintln!(
-        //                                     "Successfully reconnected trade stream for {} (attempt {})",
-        //                                     symbol_clone, retry_count
-        //                                 );
-        //                                 continue 'connection;
-        //                             }
-        //                             Err(e) => {
-        //                                 eprintln!(
-        //                                     "Failed to reconnect trade stream for {}: {} (attempt {})",
-        //                                     symbol_clone, e, retry_count
-        //                                 );
-        //                                 if retry_count >= MAX_RECONNECT_ATTEMPTS {
-        //                                     eprintln!(
-        //                                         "Max reconnection attempts ({}) reached for {}. Stopping stream.",
-        //                                         MAX_RECONNECT_ATTEMPTS, symbol_clone
-        //                                     );
-        //                                     return;
-        //                                 }
-        //                                 // Wait before next retry
-        //                                 sleep(RECONNECT_DELAY).await;
-        //                             }
-        //                         }
-        //                     }
-        //                 }
-        //             });
-        //
-        //             handlers.insert(symbol.clone(), handle);
-        //             // Add symbol to active trade symbols list
-        //             self.symbols_active_trade.write().await.push(symbol);
-        //         }
-        //
-        //
+        // Validate symbols first
+        context.validate_symbols(symbols).await?;
+
+        let mut handlers = context.trade_handlers().write().await;
+        let api_url = context.api_wss_url().to_string();
+
+        for symbol in symbols {
+            let symbol = symbol.to_lowercase();
+
+            if handlers.contains_key(&symbol) {
+                // Symbol is already in the handlers collection, do nothing
+                continue;
+            }
+
+            let stream_name = format!("{}@trade", symbol);
+            let ws_stream =
+                utils_connect::connect_websocket_static(&stream_name, api_url.to_string())
+                    .await
+                    .expect("Failed to connect to WebSocket");
+
+            let symbol_clone = symbol.clone();
+            let stream_name = format!("{}@trade", symbol_clone);
+            let api_url_clone = api_url.clone();
+
+            // Clone the processor from context before spawning the tokio task
+            let ctx_clone = context.clone();
+
+            let handle = tokio::spawn(async move {
+                let mut reconnect_time = Instant::now() + RECONNECT_INTERVAL;
+                let mut ws_stream = ws_stream;
+
+                'connection: loop {
+                    loop {
+                        // Check if we need to reconnect
+                        if Instant::now() >= reconnect_time {
+                            break;
+                        }
+
+                        // Process messages with timeout
+                        match tokio::time::timeout(Duration::from_secs(1), ws_stream.next()).await {
+                            Ok(Some(Ok(msg))) => {
+                                if let Message::Text(text) = msg {
+                                    let bar = utils::extract_trade_bar_from_json(
+                                        text.as_str(),
+                                        &symbol_clone,
+                                    )
+                                    .await;
+                                    if let Some(bar) = bar {
+                                        let (_, data) = TradeBar::encode_to_sbe(bar)
+                                            .expect("Failed to encode trade data");
+
+                                        if let Err(e) = ctx_clone.process_event(&[data]).await {
+                                            eprintln!("Error processing trade data: {}", e);
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                            Ok(Some(Err(e))) => {
+                                eprintln!("WebSocket error for {}: {}", symbol_clone, e);
+                                break;
+                            }
+                            Ok(None) => {
+                                eprintln!("WebSocket stream ended for {}", symbol_clone);
+                                break;
+                            }
+                            Err(_) => continue, // Timeout, continue checking reconnect time
+                        }
+                    }
+
+                    // Attempt to reconnect with retry limit
+                    let mut retry_count = 0;
+                    loop {
+                        retry_count += 1;
+                        match utils_connect::connect_websocket_static(
+                            &stream_name,
+                            api_url_clone.to_string(),
+                        )
+                        .await
+                        {
+                            Ok(new_stream) => {
+                                ws_stream = new_stream;
+                                reconnect_time = Instant::now() + RECONNECT_INTERVAL;
+                                eprintln!(
+                                    "Successfully reconnected trade stream for {} (attempt {})",
+                                    symbol_clone, retry_count
+                                );
+                                continue 'connection;
+                            }
+                            Err(e) => {
+                                eprintln!(
+                                    "Failed to reconnect trade stream for {}: {} (attempt {})",
+                                    symbol_clone, e, retry_count
+                                );
+                                if retry_count >= MAX_RECONNECT_ATTEMPTS {
+                                    eprintln!(
+                                                "Max reconnection attempts ({}) reached for {}. Stopping stream.",
+                                                MAX_RECONNECT_ATTEMPTS, symbol_clone
+                                            );
+                                    return;
+                                }
+                                // Wait before next retry
+                                sleep(RECONNECT_DELAY).await;
+                            }
+                        }
+                    }
+                }
+            });
+
+            handlers.insert(symbol.clone(), handle);
+            // Add symbol to active trade symbols list
+            context.symbols_active_trade().write().await.push(symbol);
+        }
 
         Ok(())
     }
@@ -188,7 +207,7 @@ where
     /// - Updates active symbols tracking
     ///
     async fn stop_trade_data(
-        &context: &Context,
+        context: &Context,
         symbols: &[Context::Symbol],
     ) -> Result<(), Context::Error> {
         // If no symbols provided, do nothing
@@ -197,7 +216,6 @@ where
         }
 
         let mut handlers = context.trade_handlers().write().await;
-        let mut stopped_symbols = Vec::new();
         let mut not_found_symbols = Vec::new();
 
         for symbol in symbols {
@@ -212,7 +230,6 @@ where
             // Remove and abort the handler for this symbol
             if let Some(handle) = handlers.remove(&symbol) {
                 handle.abort();
-                stopped_symbols.push(symbol.clone());
                 // Remove symbol from active trade symbols list
                 let mut active_symbols = context.symbols_active_trade().write().await;
                 if let Some(pos) = active_symbols.iter().position(|s| s == &symbol) {
@@ -220,6 +237,9 @@ where
                 }
             }
         }
+
+        // Return the RW lock
+        drop(handlers);
 
         // If any symbols were not found in ohlcv_handlers, return an error
         if !not_found_symbols.is_empty() {
