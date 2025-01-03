@@ -1,11 +1,11 @@
 mod api_url;
-mod symbols_integration;
+mod getters;
 mod ohlcv_data_integration;
+mod symbols_integration;
 mod trade_data_integration;
+mod types;
 mod utils;
 mod utils_connect;
-mod getters;
-mod types;
 
 use reqwest::Client;
 use std::collections::{HashMap, HashSet};
@@ -75,4 +75,3 @@ impl ImsBinanceDataIntegration {
         }
     }
 }
-

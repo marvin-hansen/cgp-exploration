@@ -1,31 +1,35 @@
 use crate::getters::HasBinanceIntegrationFields;
 use crate::{ImsBinanceDataIntegration, SYMBOL_CACHE_DURATION};
+use cgp::core::Async;
 use cgp::prelude::HasErrorType;
-use common_errors::MessageProcessingError;
 use serde_json::Value;
 use std::collections::HashSet;
 use tokio::time::Instant;
-use trait_data_integration::{
-    CanFetchExchangeSymbols, HasApiUrl, HasSymbolType, ProvideSymbolType};
+use error_data_integration::ImsDataIntegrationError;
+use trait_data_integration::{CanFetchExchangeSymbols, HasApiUrl, HasSymbolType, SymbolFetcher, SymbolValidator};
 
-impl<Context> CanFetchExchangeSymbols<Context> for ImsBinanceDataIntegration
+impl<Context> SymbolFetcher<Context> for ImsBinanceDataIntegration
 where
-    Context:
-        HasSymbolType<Symbol = String> + HasErrorType + HasBinanceIntegrationFields + HasApiUrl,
+    Context: HasSymbolType<Symbol = String>
+        + HasErrorType<Error= ImsDataIntegrationError>
+        + HasBinanceIntegrationFields
+        + HasApiUrl
+        + Async
+        + Sync
+        + Send,
 {
-    /// Retrieves and caches the list of valid trading symbols from Binance.
+    /// Fetches a list of valid trading symbols from the Binance API.
     ///
-    /// This method:
-    /// 1. Checks the cache first, returning cached symbols if they're still valid
-    /// 2. If cache is stale or empty, fetches fresh symbols from Binance API
-    /// 3. Updates the cache with new symbols and timestamp
+    /// This function will first check the cache to see if the symbols are already
+    /// available. If the cache is stale or doesn't exist, it will fetch the
+    /// symbols from the API and update the cache.
     ///
-    /// The cache duration is set to 120 minutes (2 hours) to balance API rate limits
-    /// with symbol list accuracy.
+    /// The API endpoint is [GET /api/v3/exchangeInfo](https://binance-docs.github.io/apidocs/spot/en/#how-to-get-all-symbols-information-user-data-streams).
     ///
-    /// # Returns
-    /// - `Ok(HashSet<String>)`: Set of valid trading symbols
-    /// - `Err(MessageProcessingError)`: If API call fails or response is invalid
+    /// # Errors
+    ///
+    /// This function will return an error if the API request fails or if
+    /// the response can't be deserialized into JSON.
     ///
     async fn fetch_exchange_symbols(
         context: &Context,
@@ -41,17 +45,18 @@ where
         let url = format!("{}/exchangeInfo", context.api_url());
         let response =
             context.http_client().get(&url).send().await.map_err(|e| {
-                MessageProcessingError::new(format!("Failed to fetch symbols: {}", e))
+                ImsDataIntegrationError::FailedToFetchSymbols(e.to_string()).into()
             })?;
 
         let data: Value = response
             .json()
             .await
-            .map_err(|e| MessageProcessingError::new(format!("Failed to parse response: {}", e)))?;
+            .map_err(|e| ImsDataIntegrationError::FailedToDeserializeJsonSymbols(e.to_string()).into())?;
+
 
         let symbols = data["symbols"]
             .as_array()
-            .ok_or_else(|| MessageProcessingError::new("Invalid response format".to_string()))?
+            .ok_or_else(|| ImsDataIntegrationError::FailedToExtractSymbolsFromResponse("".to_string()).into())?
             .iter()
             .filter_map(|s| s["symbol"].as_str().map(String::from))
             .collect::<HashSet<_>>();
@@ -63,39 +68,49 @@ where
     }
 }
 
-// impl<Context> CanValidateSymbols<Context> for ImsBinanceDataIntegration
-// where
-//     Context: HasSymbolType + HasErrorType,
-// {
-//     /// Validates a list of trading symbols against Binance's supported symbols.
-//     ///
-//     /// This method:
-//     /// 1. Retrieves the current list of valid symbols (using cache when possible)
-//     /// 2. Checks each input symbol against the valid symbol list
-//     /// 3. Returns an error if any symbols are invalid
-//     ///
-//     /// # Arguments
-//     /// * `symbols` - List of symbols to validate
-//     ///
-//     /// # Returns
-//     /// - `Ok(true)`: If all symbols are valid
-//     /// - `Err(MessageProcessingError)`: If any symbols are invalid, with error message listing invalid symbols
-//     ///
-//     async fn validate_symbols(&self, symbols: &[Self::Symbol]) -> Result<bool, Self::Error>{
-//         let valid_symbols = self.get_exchange_symbols().await?;
-//
-//         let invalid_symbols: Vec<_> = symbols
-//             .iter()
-//             .filter(|s| !valid_symbols.contains(*s))
-//             .collect();
-//
-//         if !invalid_symbols.is_empty() {
-//             return Err(MessageProcessingError::new(format!(
-//                 "The following symbols are not traded on Binance: {:?}",
-//                 invalid_symbols
-//             )));
-//         }
-//
-//         Ok(true)
-//     }
-// }
+impl<Context> SymbolValidator<Context> for ImsBinanceDataIntegration
+where
+    Context: HasSymbolType<Symbol = String>
+    + HasErrorType<Error= ImsDataIntegrationError>
+    + HasBinanceIntegrationFields
+    + CanFetchExchangeSymbols
+    + Async
+    + Sync
+    + Send,
+{
+    /// Validates a list of trading symbols against Binance's supported symbols.
+    ///
+    /// This method:
+    /// 1. Retrieves the current list of valid symbols (using cache when possible)
+    /// 2. Checks each input symbol against the valid symbol list
+    /// 3. Returns an error if any symbols are invalid
+    ///
+    /// # Arguments
+    /// * `symbols` - List of symbols to validate
+    ///
+    /// # Returns
+    /// - `Ok(true)`: If all symbols are valid
+    /// - `Err(MessageProcessingError)`: If any symbols are invalid, with error message listing invalid symbols
+    ///
+    async fn validate_symbols( context: &Context, symbols: &[Context::Symbol]) -> Result<bool, Context::Error>{
+
+        let valid_symbols = match Context::fetch_exchange_symbols(context).await{
+            Ok(valid_symbols) => valid_symbols,
+            Err(e) => return Err(e),
+        };
+
+        let invalid_symbols: Vec<_> = symbols
+            .iter()
+            .filter(|s| !valid_symbols.contains(*s))
+            .collect();
+
+        if !invalid_symbols.is_empty() {
+            return Err(ImsDataIntegrationError::FailedToValidateSymbols(format!(
+                "The following symbols are invalid and not traded on Binance: {:?}",
+                invalid_symbols
+            )));
+        }
+
+        Ok(true)
+    }
+}

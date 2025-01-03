@@ -15,6 +15,7 @@ rust_library(
     visibility = ["//visibility:public"],
     deps = [
         # Internal crates
+        "//alias:error_data_integration",
         # External crates
         "//thirdparty/crates:cgp",
     ],

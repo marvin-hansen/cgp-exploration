@@ -16,6 +16,7 @@ rust_library(
         "//alias:common_data_bar",
         "//alias:common_data_bar_ext",
         "//alias:common_errors",
+        "//alias:error_data_integration",
         "//alias:trait_data_integration",
         # External crates
         "//thirdparty/crates:cgp",
