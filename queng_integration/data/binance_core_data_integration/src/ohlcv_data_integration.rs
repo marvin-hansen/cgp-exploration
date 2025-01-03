@@ -8,9 +8,9 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::{sleep, Instant};
 use tokio_tungstenite::tungstenite::Message;
-use trait_data_integration::{EventProcessor, ImsDataIntegration, ImsOhlcvDataIntegration};
+use trait_data_integration::{CanValidateSymbols, EventProcessor, HasApiUrl};
 
-impl ImsOhlcvDataIntegration for ImsBinanceDataIntegration {
+impl ImsBinanceDataIntegration {
     /// Starts real-time OHLCV (candlestick) data streams for the specified symbols.
     ///
     /// This method establishes WebSocket connections for each symbol to receive real-time OHLCV data.
@@ -46,13 +46,13 @@ impl ImsOhlcvDataIntegration for ImsBinanceDataIntegration {
         processor: Arc<P>,
     ) -> Result<(), MessageProcessingError>
     where
-        P: EventProcessor + Send + Sync + 'static,
+        P: EventProcessor<P> + Send + Sync + 'static,
     {
         // Validate symbols first
         self.validate_symbols(symbols).await?;
 
         let mut handlers = self.ohlcv_handlers.write().await;
-        let api_url = self.api_wss_url.clone();
+        let api_url = self.api_wss_url().clone();
 
         for symbol in symbols {
             let symbol = symbol.to_lowercase();

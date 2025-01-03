@@ -1,13 +1,15 @@
-mod binance_api_url;
-mod ims_integration;
+mod api_url;
+mod symbols_integration;
 mod ohlcv_data_integration;
 mod trade_data_integration;
 mod utils;
 mod utils_connect;
+mod getters;
 
 use reqwest::Client;
 use std::collections::{HashMap, HashSet};
 use std::time::Duration;
+use cgp::prelude::*;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use tokio::time::Instant;
@@ -53,8 +55,6 @@ pub(crate) const RECONNECT_DELAY: Duration = Duration::from_secs(5);
 ///
 #[derive(Default)]
 pub struct ImsBinanceDataIntegration {
-    api_base_url: String,
-    api_wss_url: String,
     http_client: Client,
     symbols_active_trade: RwLock<Vec<String>>,
     symbols_active_ohlcv: RwLock<Vec<String>>,
@@ -64,10 +64,8 @@ pub struct ImsBinanceDataIntegration {
 }
 
 impl ImsBinanceDataIntegration {
-    pub fn new(api_base_url: &str, api_wss_url: &str) -> Self {
+    pub fn new() -> Self {
         Self {
-            api_base_url: api_base_url.to_string(),
-            api_wss_url: api_wss_url.to_string(),
             http_client: Client::new(),
             symbols_active_trade: RwLock::new(Vec::with_capacity(50)),
             symbols_active_ohlcv: RwLock::new(Vec::with_capacity(50)),
@@ -77,3 +75,4 @@ impl ImsBinanceDataIntegration {
         }
     }
 }
+

@@ -20,6 +20,8 @@ common_errors = {workspace = true}
 trait_data_integration = {workspace = true}
 
 # External crates
+# External crates
+cgp = {workspace = true}
 chrono = { workspace = true }
 futures-util = { workspace = true }
 reqwest = { workspace = true }

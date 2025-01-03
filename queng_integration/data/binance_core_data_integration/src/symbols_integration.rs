@@ -1,11 +1,17 @@
+use crate::getters::HasBinanceIntegrationFields;
 use crate::{ImsBinanceDataIntegration, SYMBOL_CACHE_DURATION};
+use cgp::prelude::HasErrorType;
 use common_errors::MessageProcessingError;
 use serde_json::Value;
 use std::collections::HashSet;
+use std::future::Future;
 use tokio::time::Instant;
-use trait_data_integration::ImsDataIntegration;
+use trait_data_integration::{CanFetchExchangeSymbols, CanValidateSymbols, HasSymbolType};
 
-impl ImsDataIntegration for ImsBinanceDataIntegration {
+impl<Context> CanFetchExchangeSymbols<Context> for ImsBinanceDataIntegration
+where
+    Context: HasSymbolType + HasErrorType,
+{
     /// Retrieves and caches the list of valid trading symbols from Binance.
     ///
     /// This method:
@@ -20,16 +26,16 @@ impl ImsDataIntegration for ImsBinanceDataIntegration {
     /// - `Ok(HashSet<String>)`: Set of valid trading symbols
     /// - `Err(MessageProcessingError)`: If API call fails or response is invalid
     ///
-    async fn get_exchange_symbols(&self) -> Result<HashSet<String>, MessageProcessingError> {
+    async fn fetch_exchange_symbols(&self) -> Result<HashSet<Context::Symbol>, Context::Error> {
         // Check cache first
-        if let Some((symbols, timestamp)) = &*self.symbol_cache.read().await {
+        if let Some((symbols, timestamp)) = &*self.symbol_cache().read().await {
             if timestamp.elapsed() < SYMBOL_CACHE_DURATION {
                 return Ok(symbols.clone());
             }
         }
 
-        // Cache is stale or doesn't exist, fetch from API
-        let url = format!("{}/exchangeInfo", self.api_base_url);
+        // Cache is stale or doesn't exist, fetch symbols from API
+        let url = format!("{}/exchangeInfo", self.api_base_url());
         let response =
             self.http_client.get(&url).send().await.map_err(|e| {
                 MessageProcessingError::new(format!("Failed to fetch symbols: {}", e))
@@ -52,7 +58,12 @@ impl ImsDataIntegration for ImsBinanceDataIntegration {
 
         Ok(symbols)
     }
+}
 
+impl<Context> CanValidateSymbols<Context> for ImsBinanceDataIntegration
+where
+    Context: HasSymbolType + HasErrorType,
+{
     /// Validates a list of trading symbols against Binance's supported symbols.
     ///
     /// This method:
@@ -67,7 +78,7 @@ impl ImsDataIntegration for ImsBinanceDataIntegration {
     /// - `Ok(true)`: If all symbols are valid
     /// - `Err(MessageProcessingError)`: If any symbols are invalid, with error message listing invalid symbols
     ///
-    async fn validate_symbols(&self, symbols: &[String]) -> Result<bool, MessageProcessingError> {
+    async fn validate_symbols(&self, symbols: &[Self::Symbol]) -> Result<bool, Self::Error>{
         let valid_symbols = self.get_exchange_symbols().await?;
 
         let invalid_symbols: Vec<_> = symbols
