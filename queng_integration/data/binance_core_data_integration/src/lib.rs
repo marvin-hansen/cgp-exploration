@@ -7,10 +7,12 @@ mod types;
 mod utils;
 mod utils_connect;
 
+use cgp::prelude::*;
 use reqwest::Client;
 use std::collections::{HashMap, HashSet};
+use std::ops::Deref;
+use std::sync::Arc;
 use std::time::Duration;
-use cgp::prelude::*;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use tokio::time::Instant;
@@ -57,8 +59,31 @@ pub(crate) const RECONNECT_DELAY: Duration = Duration::from_secs(5);
 /// - Thread-safe connection management
 /// - Automatic cleanup of terminated connections
 ///
-#[derive(Default, HasField)]
+#[derive(Clone)]
 pub struct UseImsBinanceDataIntegration {
+    pub fields: Arc<ImsBinanceDataContextFields>,
+}
+
+impl UseImsBinanceDataIntegration {
+    pub fn new() -> Self {
+        Self {
+            fields: Arc::new(ImsBinanceDataContextFields::new()),
+        }
+    }
+}
+
+
+// Implementing Deref will help propagating `HasField` implementation
+// via `HasField`'s blanket implementation.
+impl Deref for UseImsBinanceDataIntegration {
+    type Target = ImsBinanceDataContextFields;
+    fn deref(&self) -> &ImsBinanceDataContextFields {
+        &self.fields
+    }
+}
+
+#[derive(HasField, Default)]
+pub struct ImsBinanceDataContextFields {
     http_client: Client,
     symbols_active_trade: RwLock<Vec<String>>,
     symbols_active_ohlcv: RwLock<Vec<String>>,
@@ -67,7 +92,7 @@ pub struct UseImsBinanceDataIntegration {
     ohlcv_handlers: RwLock<HashMap<String, JoinHandle<()>>>,
 }
 
-impl UseImsBinanceDataIntegration {
+impl ImsBinanceDataContextFields {
     pub fn new() -> Self {
         Self {
             http_client: Client::new(),
