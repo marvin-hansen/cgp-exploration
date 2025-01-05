@@ -49,6 +49,12 @@ alias(
 )
 
 alias(
+    name = "deep_causality_macros",
+    actual = "//thirdparty/crates/deep_causality_macros-0.4.10:deep_causality_macros",
+    tags = ["manual"],
+)
+
+alias(
     name = "enum_dispatch",
     actual = "//thirdparty/crates/enum_dispatch-0.3.13:enum_dispatch",
     tags = ["manual"],
@@ -128,7 +134,7 @@ alias(
 
 alias(
     name = "syn",
-    actual = "//thirdparty/crates/syn-2.0.94:syn",
+    actual = "//thirdparty/crates/syn-2.0.95:syn",
     tags = ["manual"],
 )
 
