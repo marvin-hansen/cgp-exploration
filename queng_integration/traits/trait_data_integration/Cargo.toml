@@ -13,5 +13,8 @@ workspace = true
 
 
 [dependencies]
+# Internal crates
+error_data_integration = { workspace = true }
+
 # External crates
 cgp = {workspace = true}

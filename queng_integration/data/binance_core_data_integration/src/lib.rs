@@ -10,11 +10,13 @@ mod utils_connect;
 use reqwest::Client;
 use std::collections::{HashMap, HashSet};
 use std::time::Duration;
+use cgp::prelude::*;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use tokio::time::Instant;
 
 pub use crate::api_url::*;
+pub use crate::getters::*;
 
 /// Duration between symbol cache refreshes.
 ///
@@ -55,7 +57,7 @@ pub(crate) const RECONNECT_DELAY: Duration = Duration::from_secs(5);
 /// - Thread-safe connection management
 /// - Automatic cleanup of terminated connections
 ///
-#[derive(Default)]
+#[derive(Default, HasField)]
 pub struct UseImsBinanceDataIntegration {
     http_client: Client,
     symbols_active_trade: RwLock<Vec<String>>,

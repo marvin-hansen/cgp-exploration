@@ -1,4 +1,4 @@
-use crate::HasSymbolType;
+use crate::{HasApiUrl, HasSymbolType};
 use cgp::prelude::*;
 use std::collections::HashSet;
 
@@ -6,7 +6,7 @@ use std::collections::HashSet;
     name:  SymbolFetchComponent,
     provider: SymbolFetchProvider,}]
 #[async_trait]
-pub trait CanFetchExchangeSymbols: HasSymbolType + HasErrorType + Async {
+pub trait CanFetchExchangeSymbols: HasSymbolType + HasErrorType + HasApiUrl + Async {
     async fn fetch_exchange_symbols(&self) -> Result<HashSet<Self::Symbol>, Self::Error>;
 }
 

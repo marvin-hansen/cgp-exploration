@@ -13,12 +13,10 @@ use trait_data_integration::{
 impl<Context> SymbolFetchProvider<Context> for UseImsBinanceDataIntegration
 where
     Context: HasSymbolType<Symbol = String>
-        + HasErrorType<Error = ImsDataIntegrationError>
         + HasBinanceIntegrationFields
+        + HasErrorType<Error = ImsDataIntegrationError>
         + HasApiUrl
-        + Async
-        + Sync
-        + Send,
+        + Async,
 {
     /// Fetches a list of valid trading symbols from the Binance API.
     ///

@@ -6,7 +6,9 @@ rust_library(
         "src/**",
     ]),
     crate_root = "src/lib.rs",
-    proc_macro_deps = [],
+    proc_macro_deps = [
+        "//thirdparty/crates:deep_causality_macros",
+    ],
     tags = [
         "binance_spot_data_integration",
         "data_integration",

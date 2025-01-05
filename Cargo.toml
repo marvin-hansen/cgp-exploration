@@ -87,6 +87,7 @@ trait-variant = { version = "0.1" }
 # Regular dependencies
 cgp = {version = "0.2"}
 chrono = { version = "0.4", features = ["serde"] }
+deep_causality_macros = { version = "0.4" }
 rust_decimal = { version = "1" }
 futures = { version = "0.3" }
 futures-util = {version = "0.3"}

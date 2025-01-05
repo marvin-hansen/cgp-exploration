@@ -2,12 +2,17 @@ use crate::UseImsBinanceDataIntegration;
 use cgp::prelude::*;
 use reqwest::Client;
 use std::collections::{HashMap, HashSet};
+use std::marker::PhantomData;
+use std::ops::Deref;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use tokio::time::Instant;
 
-#[cgp_component {provider: BinanceIntegrationFieldsGetter,}]
-pub(crate) trait HasBinanceIntegrationFields {
+#[cgp_component {
+    name: BinanceIntegrationFieldsComponent,
+    provider: BinanceIntegrationFieldsProvider,
+    }]
+pub trait HasBinanceIntegrationFields {
     fn http_client(&self) -> &Client;
     fn symbols_active_trade(&self) -> &RwLock<Vec<String>>;
     fn symbols_active_ohlcv(&self) -> &RwLock<Vec<String>>;
@@ -16,28 +21,36 @@ pub(crate) trait HasBinanceIntegrationFields {
     fn ohlcv_handlers(&self) -> &RwLock<HashMap<String, JoinHandle<()>>>;
 }
 
-impl HasBinanceIntegrationFields for UseImsBinanceDataIntegration {
-    fn http_client(&self) -> &Client {
-        &self.http_client
+impl<Context> BinanceIntegrationFieldsProvider<Context> for UseImsBinanceDataIntegration
+where
+    Context: HasField<symbol!("http_client"), Value = Client>,
+    Context: HasField<symbol!("symbols_active_trade"), Value =  RwLock<Vec<String>>>,
+    Context: HasField<symbol!("symbols_active_ohlcv"), Value =  RwLock<Vec<String>>>,
+    Context: HasField<symbol!("symbol_cache"), Value =  RwLock<Option<(HashSet<String>, Instant)>>>,
+    Context: HasField<symbol!("trade_handlers"), Value =  RwLock<HashMap<String, JoinHandle<()>>>>,
+    Context: HasField<symbol!("ohlcv_handlers"), Value =  RwLock<HashMap<String, JoinHandle<()>>>>,
+{
+    fn http_client(context: &Context) -> &Client where <Context as Deref>::Target: Deref{
+        context.get_field(PhantomData::<Client>)
     }
 
-    fn symbols_active_trade(&self) -> &RwLock<Vec<String>> {
-        &self.symbols_active_trade
+    fn symbols_active_trade(context: &Context) -> &RwLock<Vec<String>> {
+        context.get_field(PhantomData::<RwLock<Vec<String>>>)
     }
 
-    fn symbols_active_ohlcv(&self) -> &RwLock<Vec<String>> {
-        &self.symbols_active_ohlcv
+    fn symbols_active_ohlcv(context: &Context) -> &RwLock<Vec<String>> {
+        context.get_field(PhantomData::<RwLock<Vec<String>>>)
     }
 
-    fn symbol_cache(&self) -> &RwLock<Option<(HashSet<String>, Instant)>> {
-        &self.symbol_cache
+    fn symbol_cache(context: &Context) -> &RwLock<Option<(HashSet<String>, Instant)>> {
+        context.get_field(PhantomData::<RwLock<Option<(HashSet<String>, Instant)>>>)
     }
 
-    fn trade_handlers(&self) -> &RwLock<HashMap<String, JoinHandle<()>>> {
-        &self.trade_handlers
+    fn trade_handlers(context: &Context) -> &RwLock<HashMap<String, JoinHandle<()>>> {
+        context.get_field(PhantomData::<RwLock<HashMap<String, JoinHandle<()>>>>)
     }
 
-    fn ohlcv_handlers(&self) -> &RwLock<HashMap<String, JoinHandle<()>>> {
-        &self.ohlcv_handlers
+    fn ohlcv_handlers(context: &Context) -> &RwLock<HashMap<String, JoinHandle<()>>> {
+        context.get_field(PhantomData::<RwLock<HashMap<String, JoinHandle<()>>>>)
     }
 }

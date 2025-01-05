@@ -1,15 +1,12 @@
 use binance_core_data_integration::{UseBinanceSpotMainnetUrl, UseImsBinanceDataIntegration};
+use cgp::core::error::*;
 use cgp::prelude::*;
+use deep_causality_macros::Constructor;
+use error_data_integration::UseImsDataIntegrationError;
 use trait_data_integration::*;
 
-#[derive(Default, Copy, Clone)]
+#[derive(Constructor, Default, Copy, Clone)]
 pub struct ImsBinanceSpotDataIntegration {}
-
-impl ImsBinanceSpotDataIntegration {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 pub struct ImsBinanceSpotDataIntegrationComponents;
 
@@ -20,8 +17,10 @@ impl HasComponents for ImsBinanceSpotDataIntegration {
 delegate_components! {
     ImsBinanceSpotDataIntegrationComponents {
         ApiUrlComponent: UseBinanceSpotMainnetUrl,
+        ErrorTypeComponent: UseImsDataIntegrationError,
         [
             // These are always the same for all Binance integrations
+            BinanceIntegrationFieldsComponent:
             SymbolFetchComponent,
             SymbolValidatorComponent,
             OhlcvDataStreamComponent,

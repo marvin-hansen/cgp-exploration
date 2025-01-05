@@ -1,4 +1,11 @@
+use cgp::core::error::ProvideErrorType;
 use std::error::Error;
+
+pub struct UseImsDataIntegrationError;
+
+impl<Context> ProvideErrorType<Context> for UseImsDataIntegrationError {
+    type Error = ImsDataIntegrationError;
+}
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum ImsDataIntegrationError {
