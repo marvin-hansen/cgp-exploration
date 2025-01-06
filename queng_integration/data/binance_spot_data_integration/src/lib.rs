@@ -1,4 +1,4 @@
-use binance_core_data_integration::{UseBinanceSpotMainnetUrl, UseImsBinanceDataIntegration};
+use binance_core_data_integration::{BinanceIntegrationFieldsComponent, UseBinanceSpotMainnetUrl, UseImsBinanceDataIntegration};
 use cgp::core::error::*;
 use cgp::prelude::*;
 use deep_causality_macros::Constructor;
@@ -20,7 +20,7 @@ delegate_components! {
         ErrorTypeComponent: UseImsDataIntegrationError,
         [
             // These are always the same for all Binance integrations
-            BinanceIntegrationFieldsComponent:
+            BinanceIntegrationFieldsComponent,
             SymbolFetchComponent,
             SymbolValidatorComponent,
             OhlcvDataStreamComponent,
