@@ -1,4 +1,5 @@
 mod api_url;
+mod context;
 mod getters;
 mod ohlcv_data_integration;
 mod symbols_integration;
@@ -8,16 +9,10 @@ mod utils;
 mod utils_connect;
 
 use cgp::prelude::*;
-use reqwest::Client;
-use std::collections::{HashMap, HashSet};
-use std::ops::Deref;
-use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::RwLock;
-use tokio::task::JoinHandle;
-use tokio::time::Instant;
 
 pub use crate::api_url::*;
+pub use crate::context::*;
 pub use crate::getters::*;
 
 /// Duration between symbol cache refreshes.
@@ -60,47 +55,16 @@ pub(crate) const RECONNECT_DELAY: Duration = Duration::from_secs(5);
 /// - Automatic cleanup of terminated connections
 ///
 #[derive(Clone)]
-pub struct UseImsBinanceDataIntegration {
-    pub fields: Arc<ImsBinanceDataContextFields>,
+pub struct UseImsBinanceDataIntegration {}
+
+pub struct ImsBinanceDataContextComponents;
+
+impl HasComponents for ImsBinanceDataContext {
+    type Components = ImsBinanceDataContextComponents;
 }
 
-impl UseImsBinanceDataIntegration {
-    pub fn new() -> Self {
-        Self {
-            fields: Arc::new(ImsBinanceDataContextFields::new()),
-        }
-    }
-}
-
-
-// Implementing Deref will help propagating `HasField` implementation
-// via `HasField`'s blanket implementation.
-impl Deref for UseImsBinanceDataIntegration {
-    type Target = ImsBinanceDataContextFields;
-    fn deref(&self) -> &ImsBinanceDataContextFields {
-        &self.fields
-    }
-}
-
-#[derive(HasField, Default)]
-pub struct ImsBinanceDataContextFields {
-    http_client: Client,
-    symbols_active_trade: RwLock<Vec<String>>,
-    symbols_active_ohlcv: RwLock<Vec<String>>,
-    symbol_cache: RwLock<Option<(HashSet<String>, Instant)>>,
-    trade_handlers: RwLock<HashMap<String, JoinHandle<()>>>,
-    ohlcv_handlers: RwLock<HashMap<String, JoinHandle<()>>>,
-}
-
-impl ImsBinanceDataContextFields {
-    pub fn new() -> Self {
-        Self {
-            http_client: Client::new(),
-            symbols_active_trade: RwLock::new(Vec::with_capacity(50)),
-            symbols_active_ohlcv: RwLock::new(Vec::with_capacity(50)),
-            symbol_cache: RwLock::new(None),
-            trade_handlers: RwLock::new(HashMap::with_capacity(50)),
-            ohlcv_handlers: RwLock::new(HashMap::with_capacity(50)),
-        }
+delegate_components! {
+    ImsBinanceDataContextComponents {
+        BinanceIntegrationFieldsComponent: UseImsBinanceDataIntegration,
     }
 }

@@ -23,6 +23,7 @@ pub trait HasBinanceIntegrationFields {
 
 impl<Context> BinanceIntegrationFieldsProvider<Context> for UseImsBinanceDataIntegration
 where
+    Context: Deref,
     Context: HasField<symbol!("http_client"), Value = Client>,
     Context: HasField<symbol!("symbols_active_trade"), Value =  RwLock<Vec<String>>>,
     Context: HasField<symbol!("symbols_active_ohlcv"), Value =  RwLock<Vec<String>>>,
@@ -30,27 +31,27 @@ where
     Context: HasField<symbol!("trade_handlers"), Value =  RwLock<HashMap<String, JoinHandle<()>>>>,
     Context: HasField<symbol!("ohlcv_handlers"), Value =  RwLock<HashMap<String, JoinHandle<()>>>>,
 {
-    fn http_client(context: &Context) -> &Client where <Context as Deref>::Target: Deref{
-        context.get_field(PhantomData::<Client>)
+    fn http_client(context: &Context) -> &Client {
+        context.get_field(PhantomData::<symbol!("http_client")>)
     }
 
     fn symbols_active_trade(context: &Context) -> &RwLock<Vec<String>> {
-        context.get_field(PhantomData::<RwLock<Vec<String>>>)
+        context.get_field(PhantomData::<symbol!("symbols_active_trade")>)
     }
 
     fn symbols_active_ohlcv(context: &Context) -> &RwLock<Vec<String>> {
-        context.get_field(PhantomData::<RwLock<Vec<String>>>)
+        context.get_field(PhantomData::<symbol!("symbols_active_ohlcv")>)
     }
 
     fn symbol_cache(context: &Context) -> &RwLock<Option<(HashSet<String>, Instant)>> {
-        context.get_field(PhantomData::<RwLock<Option<(HashSet<String>, Instant)>>>)
+        context.get_field(PhantomData::<symbol!("symbol_cache")>)
     }
 
     fn trade_handlers(context: &Context) -> &RwLock<HashMap<String, JoinHandle<()>>> {
-        context.get_field(PhantomData::<RwLock<HashMap<String, JoinHandle<()>>>>)
+        context.get_field(PhantomData::<symbol!("trade_handlers")>)
     }
 
     fn ohlcv_handlers(context: &Context) -> &RwLock<HashMap<String, JoinHandle<()>>> {
-        context.get_field(PhantomData::<RwLock<HashMap<String, JoinHandle<()>>>>)
+        context.get_field(PhantomData::<symbol!("ohlcv_handlers")>)
     }
 }
