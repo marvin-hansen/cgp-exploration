@@ -59,9 +59,6 @@ pub struct UseImsBinanceDataIntegration {}
 
 pub struct ImsBinanceDataContextComponents;
 
-impl HasComponents for ImsBinanceDataContext {
-    type Components = ImsBinanceDataContextComponents;
-}
 
 delegate_components! {
     ImsBinanceDataContextComponents {

@@ -6,6 +6,11 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use tokio::time::Instant;
+use crate::ImsBinanceDataContextComponents;
+
+impl HasComponents for ImsBinanceDataContext {
+    type Components = ImsBinanceDataContextComponents;
+}
 
 #[derive(Clone)]
 pub struct ImsBinanceDataContext {
